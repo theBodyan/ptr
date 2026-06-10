@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Путь Петра</title>
+  <style>
+    :root {
+      --duration: 46s;
+      --bg: #08111b;
+      --panel: rgba(8, 18, 28, .68);
+      --panel-strong: rgba(8, 18, 28, .84);
+      --line: rgba(255,255,255,.12);
+      --line-soft: rgba(255,255,255,.08);
+      --text: #f4ead1;
+      --text-soft: rgba(244,234,209,.72);
+      --gold: #e1bd74;
+      --gold-2: #f6e4b2;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
+      overflow: hidden;
+    }
+    .bg {
+      position: fixed;
+      inset: -6vmax;
+      background: url('assets/poster_1x1.png') center/cover no-repeat;
+      filter: blur(26px) brightness(.26) saturate(.82);
+      transform: scale(1.12);
+    }
+    .bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255,255,255,.10), transparent 34%),
+        radial-gradient(circle at 50% 72%, rgba(110,197,255,.09), transparent 28%),
+        linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.48));
+    }
+    .page {
+      position: relative;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+    }
+    .wrap {
+      position: relative;
+      width: min(94vmin, 980px);
+    }
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 30px;
+      overflow: hidden;
+      background: #0d1b29;
+      box-shadow:
+        0 30px 90px rgba(0,0,0,.46),
+        inset 0 0 0 1px rgba(255,255,255,.11),
+        0 0 0 1px rgba(255,255,255,.03);
+      isolation: isolate;
+    }
+    .stage::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 1px solid rgba(255,255,255,.06);
+      pointer-events: none;
+      z-index: 6;
+    }
+    .poster,
+    .posterReveal,
+    .sheen,
+    .depth,
+    .progress,
+    .topGlow,
+    .welcome {
+      position: absolute;
+      inset: 0;
+    }
+    .poster,
+    .posterReveal {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .poster {
+      filter: blur(8px) brightness(.50) saturate(.82);
+      transform: scale(1.025);
+    }
+    .posterReveal {
+      clip-path: inset(0 0 100% 0);
+    }
+    .depth {
+      background: linear-gradient(180deg, rgba(7,16,24,.12), rgba(7,16,24,.22));
+      pointer-events: none;
+      z-index: 1;
+    }
+    .sheen {
+      pointer-events: none;
+      opacity: 0;
+      background: linear-gradient(112deg, transparent 0 36%, rgba(255,255,255,.24) 48%, transparent 58%);
+      transform: translateX(-135%);
+      mix-blend-mode: screen;
+      z-index: 3;
+    }
+    .topGlow {
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), transparent 18%);
+      z-index: 2;
+    }
+    .welcome {
+      display: grid;
+      place-items: center;
+      z-index: 5;
+      background: linear-gradient(180deg, rgba(6,12,18,.18), rgba(6,12,18,.42));
+      transition: opacity .45s ease, visibility .45s ease;
+    }
+    .welcomeCard {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+      padding: 18px 20px;
+      min-width: min(82vw, 360px);
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(10,19,30,.72), rgba(8,17,26,.84));
+      border: 1px solid var(--line);
+      box-shadow: 0 18px 48px rgba(0,0,0,.26);
+      backdrop-filter: blur(14px);
+    }
+    .welcomeTitle {
+      font-size: clamp(28px, 4.1vw, 42px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: .02em;
+      text-shadow: 0 3px 18px rgba(0,0,0,.34);
+    }
+    .welcomeMeta {
+      color: var(--text-soft);
+      font-size: 15px;
+      text-align: center;
+    }
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      appearance: none;
+      border: 0;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+      font-size: 15px;
+      transition: transform .18s ease, opacity .18s ease, background .18s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .primary {
+      color: #171208;
+      background: linear-gradient(180deg, var(--gold-2), var(--gold));
+      box-shadow: 0 10px 24px rgba(225,189,116,.22);
+    }
+    .secondary {
+      color: var(--text);
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--line-soft);
+      backdrop-filter: blur(10px);
+    }
+    .progress {
+      inset: auto 16px 16px 16px;
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.08);
+      z-index: 5;
+      opacity: 0;
+      transition: opacity .35s ease;
+      pointer-events: none;
+    }
+    .progress span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #f6e4b2 0%, #e1bd74 44%, #89d4ff 100%);
+      box-shadow: 0 0 18px rgba(137,212,255,.24);
+    }
+    .cornerControls {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+      opacity: 1;
+      translate: 0 0;
+      transition: opacity .35s ease, translate .35s ease;
+    }
+    .cornerControls .secondary,
+    .cornerControls .primary {
+      padding: 10px 14px;
+      font-size: 14px;
+    }
+    .soundLabel.muted::before { content: 'Вкл. звук'; }
+    .soundLabel.unmuted::before { content: 'Выкл. звук'; }
+    .started .welcome {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .started .posterReveal { animation: reveal var(--duration) linear forwards; }
+    .started .sheen { opacity: 1; animation: sheen 7s ease-in-out infinite; }
+    .started .progress { opacity: 1; }
+    .started .progress span { animation: progress var(--duration) linear forwards; }
+    .cornerControls button:disabled {
+      opacity: .45;
+      cursor: default;
+      transform: none;
+    }
+    .paused .posterReveal,
+    .paused .sheen,
+    .paused .progress span {
+      animation-play-state: paused !important;
+    }
+    .done .posterReveal { clip-path: inset(0 0 0 0); }
+    .done .progress {
+      opacity: 0;
+      transition-delay: .35s;
+    }
+    .done .welcome {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      background: transparent;
+    }
+    @keyframes reveal {
+      from { clip-path: inset(0 0 100% 0); }
+      to   { clip-path: inset(0 0 0 0); }
+    }
+    @keyframes progress {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+    @keyframes sheen {
+      0% { transform: translateX(-135%); }
+      45%, 100% { transform: translateX(135%); }
+    }
+    @media (max-width: 760px) {
+      .page { padding: 12px; }
+      .wrap { width: min(96vw, 96vh); }
+      .stage { border-radius: 22px; }
+      .welcomeCard { min-width: auto; width: min(86vw, 340px); padding: 16px; }
+      .progress { inset: auto 12px 12px 12px; }
+      .cornerControls { right: 12px; bottom: 12px; flex-wrap: wrap; justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <main class="page">
+    <div class="wrap">
+      <section class="stage" id="stage" aria-label="Путь Петра">
+        <img class="poster" src="assets/poster_1x1.png" alt="Путь Петра" />
+        <img class="posterReveal" src="assets/poster_1x1.png" alt="Путь Петра" />
+        <div class="depth"></div>
+        <div class="topGlow"></div>
+        <div class="sheen"></div>
+        <div class="progress" id="progress"><span></span></div>
+
+        <div class="welcome" id="welcome">
+          <div class="welcomeCard">
+            <div class="welcomeTitle">Путь Петра</div>
+            <div class="welcomeMeta">Запусти песню и открой путь за 46 секунд</div>
+            <div class="buttons">
+              <button class="primary" id="startBtn">Запустить</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="cornerControls" id="cornerControls">
+      <button class="secondary" id="soundBtn"><span class="soundLabel unmuted" id="soundLabel"></span></button>
+      <button class="secondary" id="pauseBtn">Пауза</button>
+      <button class="primary" id="restartBtn">Еще раз</button>
+    </div>
+
+    <audio id="music" src="assets/music.wav" preload="auto"></audio>
+  </main>
+
+  <script>
+    const DEFAULT_DURATION_MS = 46000;
+    const stage = document.getElementById('stage');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const soundBtn = document.getElementById('soundBtn');
+    const soundLabel = document.getElementById('soundLabel');
+    const music = document.getElementById('music');
+    const progressFill = document.querySelector('#progress span');
+
+    let durationMs = DEFAULT_DURATION_MS;
+    let remainingMs = DEFAULT_DURATION_MS;
+    let timerStart = 0;
+    let endTimer = null;
+    let muted = false;
+    let isPaused = false;
+
+    function syncDurationFromAudio() {
+      if (Number.isFinite(music.duration) && music.duration > 1) {
+        durationMs = Math.round(music.duration * 1000);
+      } else {
+        durationMs = DEFAULT_DURATION_MS;
+      }
+      if (!stage.classList.contains('started')) {
+        remainingMs = durationMs;
+      }
+      stage.style.setProperty('--duration', `${(durationMs / 1000).toFixed(3)}s`);
+    }
+
+    function resetProgressAnimation() {
+      progressFill.style.animation = 'none';
+      void progressFill.offsetWidth;
+      progressFill.style.animation = '';
+    }
+
+    function clearRun() {
+      clearTimeout(endTimer);
+      stage.classList.remove('started', 'done', 'paused');
+      isPaused = false;
+      remainingMs = durationMs;
+      pauseBtn.textContent = 'Пауза';
+      pauseBtn.disabled = true;
+      resetProgressAnimation();
+      void stage.offsetWidth;
+      music.pause();
+      music.currentTime = 0;
+      music.muted = muted;
+    }
+
+    async function startRun() {
+      syncDurationFromAudio();
+      clearRun();
+      stage.classList.add('started');
+      pauseBtn.disabled = false;
+      timerStart = Date.now();
+      endTimer = setTimeout(finishRun, remainingMs);
+      try { await music.play(); } catch (e) {}
+    }
+
+    function finishRun() {
+      clearTimeout(endTimer);
+      stage.classList.remove('started', 'paused');
+      stage.classList.add('done');
+      isPaused = false;
+      remainingMs = 0;
+      pauseBtn.textContent = 'Пауза';
+      pauseBtn.disabled = true;
+    }
+
+    function pauseRun() {
+      if (!stage.classList.contains('started') || isPaused) return;
+      clearTimeout(endTimer);
+      const elapsed = Date.now() - timerStart;
+      remainingMs = Math.max(0, remainingMs - elapsed);
+      stage.classList.add('paused');
+      isPaused = true;
+      pauseBtn.textContent = 'Продолжить';
+      music.pause();
+    }
+
+    async function resumeRun() {
+      if (!stage.classList.contains('started') || !isPaused) return;
+      stage.classList.remove('paused');
+      isPaused = false;
+      pauseBtn.textContent = 'Пауза';
+      timerStart = Date.now();
+      endTimer = setTimeout(finishRun, remainingMs);
+      try { await music.play(); } catch (e) {}
+    }
+
+    function togglePause() {
+      if (!stage.classList.contains('started')) return;
+      if (isPaused) {
+        resumeRun();
+      } else {
+        pauseRun();
+      }
+    }
+
+    function toggleSound() {
+      muted = !muted;
+      music.muted = muted;
+      soundLabel.classList.toggle('muted', muted);
+      soundLabel.classList.toggle('unmuted', !muted);
+    }
+
+    startBtn.addEventListener('click', startRun);
+    restartBtn.addEventListener('click', startRun);
+    pauseBtn.addEventListener('click', togglePause);
+    soundBtn.addEventListener('click', toggleSound);
+    music.addEventListener('ended', finishRun);
+    music.addEventListener('loadedmetadata', syncDurationFromAudio);
+
+    syncDurationFromAudio();
+    pauseBtn.disabled = true;
+  </script>
+</body>
+</html>
